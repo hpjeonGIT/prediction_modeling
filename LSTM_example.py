@@ -95,3 +95,31 @@ df_month['date'] = pd.to_datetime(df_month['date'], format='%Y-%m')
 df_month.head()
 plt.plot(df_month['date'],df_month['eurusdmonth'])
 plt.show()
+
+# low pass filter on eurusd - not recommended
+from scipy import fftpack
+sig_fft = fftpack.fft(df['eurusdclose'])
+power = np.abs(sig_fft)
+sample_freq = fftpack.fftfreq(len(df), d=1)
+#plt.plot(sample_freq,power); plt.show()
+pos_mask = np.where(sample_freq > 0)
+freqs = sample_freq[pos_mask]
+peak_freq = freqs[power[pos_mask].argmax()]
+print(peak_freq)
+plt.gcf()
+plt.figure(figsize=(5,4))
+plt.plot(df['eurusdclose'], label='Original signal')
+anslist = [0,1,2]
+for i,j in zip([0.001, 0.01, 0.1], [0,1,2]):
+    high_freq_fft = sig_fft.copy()
+    high_freq_fft[np.abs(sample_freq) > i] = 0
+    filtered_sig = fftpack.ifft(high_freq_fft)
+    plt.plot(filtered_sig, linewidth=3, label="criterion ="+str(i))
+    plt.legend(loc="best")
+    anslist[j] = filtered_sig
+    
+plt.show()
+plt.figure(figsize=(5,4))
+plt.plot(df_month['date'],df_month['eurusdmonth'])
+plt.plot(df['date'],anslist[2])
+plt.show()
