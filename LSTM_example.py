@@ -96,6 +96,37 @@ df_month.head()
 plt.plot(df_month['date'],df_month['eurusdmonth'])
 plt.show()
 
+# average per week
+ref_date = df['date'].iloc[0]
+local_sum = 0; npt = 0 
+coarse_list = []
+for i in range(1,len(df)):
+    a_date = df['date'].iloc[i]
+    if ((ref_date.year == a_date.year) and (ref_date.week == a_date.week)):
+        local_sum += df['eurusdclose'].iloc[i]
+        npt += 1
+    else:
+        if npt > 0:
+            avg = local_sum/npt
+        else:
+            avg = 0
+            
+        if (avg > 0):
+            coarse_list.append({'date':ref_date, 'eurusdweek':avg})
+        ref_date = a_date
+        local_sum = 0; npt = 0
+
+df_week = pd.DataFrame(coarse_list)
+df_week['date'] = pd.to_datetime(df_week['date'], format='%Y-%U')
+df_week.head()
+plt.gcf()
+plt.figure(figsize=(15,4))
+plt.plot(df_week['date'],df_week['eurusdweek'],'o-')
+plt.plot(df['date'],df['eurusdclose'])
+#plt.xlim(pd.Timestamp('2015-02-15'), pd.Timestamp('2015-07-01'))
+#plt.xlim([datetime.date(2010,1,1), datetime.date(2011,1,1)])
+plt.show()
+
 # low pass filter on eurusd - not recommended
 from scipy import fftpack
 sig_fft = fftpack.fft(df['eurusdclose'])
