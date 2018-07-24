@@ -1,6 +1,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
+from keras.layers.core import Dense, Activation, Dropout
+from keras.layers.recurrent import LSTM
+from keras.models import Sequential
+import time
+
 
 # building basic data frame
 brent = pd.read_csv('crudeOIL_BRENT.csv'); brent.columns = ['date','brent']
@@ -126,6 +132,39 @@ plt.plot(df['date'],df['eurusdclose'])
 #plt.xlim(pd.Timestamp('2015-02-15'), pd.Timestamp('2015-07-01'))
 #plt.xlim([datetime.date(2010,1,1), datetime.date(2011,1,1)])
 plt.show()
+
+series=df_month['eurusdmonth']
+series = df_week['eurusdweek']
+series = df['eurusdclose']
+series_s = series.copy()
+window_size=50
+for i in range(window_size):
+    series = pd.concat([series, series_s.shift(-(i+1))], axis = 1)
+
+series.dropna(axis=0, inplace=True)
+nrow = round(0.7*series.shape[0])
+train = series.iloc[:nrow, :]; test = series.iloc[nrow:,:]
+train_X = train.iloc[:,:-1]; train_y = train.iloc[:,-1]
+train_X = train_X.values;    train_y = train_y.values
+test_X = test.iloc[:,:-1];   test_y = test.iloc[:,-1]
+test_X = test_X.values;      test_y = test_y.values
+train_X = train_X.reshape(train_X.shape[0],train_X.shape[1],1)
+test_X = test_X.reshape(test_X.shape[0],test_X.shape[1],1)
+# Define the LSTM model
+model = Sequential()
+model.add(LSTM(input_shape = (window_size,1), output_dim= window_size, return_sequences = True))
+model.add(Dropout(0.5))
+model.add(LSTM(256))
+model.add(Dropout(0.5))
+model.add(Dense(1))
+model.add(Activation("linear"))
+model.compile(loss="mse", optimizer="adam")
+model.summary()
+
+start = time.time()
+model.fit(train_X,train_y,batch_size=64,nb_epoch=50,validation_split=0.1, shuffle=False)
+print("> Compilation Time : ", time.time() - start)
+
 
 # low pass filter on eurusd - not recommended
 from scipy import fftpack
