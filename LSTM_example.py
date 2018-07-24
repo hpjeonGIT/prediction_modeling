@@ -16,6 +16,7 @@ tmp = pd.merge_ordered(tmp,eurusd,on='date')
 tmp = pd.merge_ordered(tmp,usdjpn,on='date')
 df = pd.merge_ordered(tmp,sp500,on='date')
 df = df.drop(['high','low'],axis=1)
+df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
 #print(df.head())
 
 # Remove top/bottom NaN
@@ -59,9 +60,38 @@ for i in df.columns:
         maxx = df[i].max()
         df[i] = (df[i] - minx)/(maxx - minx)
         
+plt.gcf()
+plt.figure(figsize=(15,4))
 for i in df.columns:
     if i != 'date':
-        plt.plot(df[i],label=i)
-        print(i)
-    
+        ax = plt.plot(df['date'],df[i],label=i)
+        plt.legend(loc="best")
+        print(i)        
+        
+plt.xlim(pd.Timestamp('2007-01-01'), pd.Timestamp('2019-12-01'))    
+plt.show()
+
+# average per month
+ref_date = df['date'].iloc[0]
+local_sum = 0; npt = 0 
+coarse_list = []
+for i in range(1,len(df)):
+    a_date = df['date'].iloc[i]
+    if ((ref_date.year == a_date.year) and (ref_date.month == a_date.month)):
+        local_sum += df['eurusdclose'].iloc[i]
+        npt += 1
+    else:
+        if npt > 0:
+            avg = local_sum/npt
+        else:
+            avg = 0
+            
+        coarse_list.append({'date':str(a_date.year)+'-'+str(a_date.month), 'eurusdmonth':avg})
+        ref_date = a_date
+        local_sum = 0; npt = 0
+
+df_month = pd.DataFrame(coarse_list)
+df_month['date'] = pd.to_datetime(df_month['date'], format='%Y-%m')
+df_month.head()
+plt.plot(df_month['date'],df_month['eurusdmonth'])
 plt.show()
