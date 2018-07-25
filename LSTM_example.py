@@ -152,13 +152,16 @@ train_X = train_X.reshape(train_X.shape[0],train_X.shape[1],1)
 test_X = test_X.reshape(test_X.shape[0],test_X.shape[1],1)
 # Define the LSTM model
 model = Sequential()
-model.add(LSTM(input_shape = (window_size,1), output_dim= window_size, return_sequences = True))
+model.add(LSTM(input_shape = (window_size,1), return_sequences = True, units= window_size))
 model.add(Dropout(0.5))
-model.add(LSTM(256))
+model.add(LSTM(256))  # return a single vector of dimension 32
 model.add(Dropout(0.5))
 model.add(Dense(1))
-model.add(Activation("linear"))
-model.compile(loss="mse", optimizer="adam")
+model.add(LeakyReLU())
+model.add(Activation('linear'))
+#opt = SGD(lr=0.01
+opt = Adam(lr=0.001)
+model.compile(loss="mse", optimizer=opt)
 model.summary()
 
 start = time.time()
