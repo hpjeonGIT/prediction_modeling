@@ -7,6 +7,8 @@ from keras.layers.recurrent import LSTM
 from keras.models import Sequential
 import time
 
+# source of data: http://www.global-view.com/forex-trading-tools/forex-history/index.html
+# https://fred.stlouisfed.org/tags/series?t=oil
 
 # building basic data frame
 brent = pd.read_csv('crudeOIL_BRENT.csv'); brent.columns = ['date','brent']
